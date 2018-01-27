@@ -263,15 +263,13 @@ help-info()
         -W, --width         width of the extend monitor resolution(default: 1920)
         -H, --height        height of the extend monitor resolution(default: 1080)
         -X, --width-scale   scale of width
-        -Y, --height_scale  scale of height
+        -Y, --height-scale  scale of height
         -P, --postion       extend monitor position relative to the laptop
                                 0: right(default) 1: left 2: over 3: below 4: same
         -R, --rotate        let the extend monitor to be rotated in the specified direction
                                 0: normal(default, 0°) 1: inverted(180°) 2: right(90°) 3: left(270°)
     '
 }
-
-
 
 if [ $options_count -eq 0 ]; then
     echo -e "You must specify one of the '-aimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
