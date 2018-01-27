@@ -260,8 +260,8 @@ help-info()
         -h, --help          show help info
     PARAM:
         -N, --dpname        name of the extend monitor
-        -W, --width         width of the extend monitor resolution
-        -H, --height        height of the extend monitor resolution
+        -W, --width         width of the extend monitor resolution(default: 1920)
+        -H, --height        height of the extend monitor resolution(default: 1080)
         -X, --width-scale   scale of width
         -Y, --height_scale  scale of height
         -P, --postion       extend monitor position relative to the laptop
@@ -275,7 +275,7 @@ help-info()
 
 if [ $options_count -eq 0 ]; then
     echo -e "You must specify one of the '-aimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
-    exit
+    exit 1
 fi
 
 if [ $options_count -gt 1 ]; then
