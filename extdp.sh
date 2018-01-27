@@ -163,7 +163,7 @@ extdp-exec()
             ;;
     esac
     
-    # 针对NVIDIA的bug (https://askubuntu.com/questions/704503/scale-2x2-in-xrandr-causes-the-monitor-to-not-display-anything/979551#979551)
+    # 针对NVIDIA的bug (https://askubuntu.com/questions/704503/scale-2x2-in-xrandr-causes-the-display-to-not-display-anything/979551#979551)
     # 个人笔记本上(安装的Gentoo)是这样命名的，其他系统或笔记本可能不同
     meta_mode=${name/DP/DPY}
     nvidia-settings --assign CurrentMetaMode="${meta_mode}: nvidia-auto-select @${width}x${height} +${ext_pos_x}+${ext_pos_y} {ViewPortIn=${width}x${height}, ViewPortOut=${width}x${height}+${ext_pos_x}+${ext_pos_y}, ForceFullCompositionPipeline=On}"
@@ -176,7 +176,7 @@ extdp-exec()
 extdp-auto() {
     extdp_info=$(extdp-info)
     if [ -z "$extdp_info" ]; then
-        echo "find no extend monitor"
+        echo "find no external display"
         exit 0
     fi
     extdp_info_arr=($extdp_info)
@@ -253,20 +253,20 @@ help-info()
     echo -e "Example:\n\t$0 -m -N 'DP-1' -W 1920 -H 1080 -X 1.75 -Y 1.75 -P 1 -R 0"
     echo '
     OPTION:
-        -a, --auto          auto detect the extend monitor and scale it on left of the laptop
-        -i, --info          get info(name and resolution) about the extend monitor
-        -m, --manual        scale the extend monitor by the params given by manual (will use all of the params)
+        -a, --auto          auto detect the external display and scale it on left of the laptop
+        -i, --info          get info(name and resolution) about the external display
+        -m, --manual        scale the external display by the params manual given(will use all of the params)
         -s, --suggest       give a scale suggest based on the params W and H
         -h, --help          show help info
     PARAM:
-        -N, --dpname        name of the extend monitor
-        -W, --width         width of the extend monitor resolution(default: 1920)
-        -H, --height        height of the extend monitor resolution(default: 1080)
+        -N, --dpname        name of the external display
+        -W, --width         width of the external display resolution(default: 1920)
+        -H, --height        height of the external display resolution(default: 1080)
         -X, --width-scale   scale of width
         -Y, --height-scale  scale of height
-        -P, --postion       extend monitor position relative to the laptop
+        -P, --postion       external display position relative to the laptop
                                 0: right(default) 1: left 2: over 3: below 4: same
-        -R, --rotate        let the extend monitor to be rotated in the specified direction
+        -R, --rotate        let the external display to be rotated in the specified direction
                                 0: normal(default, 0°) 1: inverted(180°) 2: right(90°) 3: left(270°)
     '
 }
@@ -282,7 +282,7 @@ if [ $options_count -gt 1 ]; then
 fi
 
 if [ $auto = true ]; then extdp-auto; exit; fi
-if [ $info = true ]; then info=$(extdp-info); if [ -z "$info" ]; then echo "find no extend monitor"; fi; exit; fi
+if [ $info = true ]; then info=$(extdp-info); if [ -z "$info" ]; then echo "find no external display"; fi; exit; fi
 if [ $manual = true ]; then extdp-exec "$N" "$W" "$H" "$X" "$Y" "$P" "$R"; exit; fi
 if [ $suggest = true ]; then extdp-scale "$W" "$H"; exit; fi
 if [ $help = true ]; then help-info; exit; fi
