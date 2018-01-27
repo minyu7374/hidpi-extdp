@@ -1,36 +1,36 @@
 #!/usr/bin/env bash
 #########################################################################
-# File Name: extdp.sh
+# File Name: extdp
 # Author: minyu
 # mail: minyu7374@gmail.com
 # Created Time: Sat 27 Jan 2018 8:21:32 AM CST
 #########################################################################
-buildin_dpname="eDP-1-1" buildin_width=3840
+buildin_dpname="eDP-1-1" 
+buildin_width=3840
 buildin_height=2160
 
 declare -A width_scale_dic
 declare -A height_scale_dic
 
-width_scale_dic[1920]="1.75"
-height_scale_dic[1080]="1.75"
-height_scale_dic[1200]="1.5"
+width_scale_dic[1920]=1.75
+height_scale_dic[1080]=1.75
+height_scale_dic[1200]=1.5
 
-width_scale_dic[1600]="2.25"
-height_scale_dic[900]="2.25"
+width_scale_dic[1600]=2.25
+height_scale_dic[900]=2.25
 
-width_scale_dic[1366]="2.5"
-width_scale_dic[1024]="3.5"
-height_scale_dic[768]="2.5"
+width_scale_dic[1366]=2.5
+width_scale_dic[1024]=3.5
+height_scale_dic[768]=2.5
 
 positions=("right-of" "left-of" "over" "below" "same-as")
 rotates=("normal" "inverted" "right" "left")
 
-max() {
-    v=$1
+max() 
+{
+    v=$1; shift
     while [ -n "$1" ]; do
-        if [ "$1" -lt "$v" ]; then
-            v=$1
-        fi
+        if [ "$1" -gt "$v" ]; then v=$1; fi
         shift 
     done
     echo "$v"
@@ -92,8 +92,8 @@ extdp-exec()
         2);&
         3)
             # 90° / 270°
-            fb_ext_width=$panning_width
-            fb_ext_height=$panning_height
+            fb_ext_width=$panning_height
+            fb_ext_height=$panning_width
             ;;
         *)
             echo "wrong rotate" >&2
@@ -148,12 +148,14 @@ extdp-exec()
             in_pos_y=$fb_ext_height
             ;;
         3)
+            # below
             in_pos_x=0
             in_pos_y=0
             ext_pos_x=0
             ext_pos_y=$buildin_height
             ;;
         4)
+            # same
             in_pos_x=0
             in_pos_y=0
             ext_pos_x=0
@@ -162,7 +164,8 @@ extdp-exec()
     esac
     
     # 针对NVIDIA的bug (https://askubuntu.com/questions/704503/scale-2x2-in-xrandr-causes-the-monitor-to-not-display-anything/979551#979551)
-    meta_mode=${name//DP/DPY}
+    # 个人笔记本上(安装的Gentoo)是这样命名的，其他系统或笔记本可能不同
+    meta_mode=${name/DP/DPY}
     nvidia-settings --assign CurrentMetaMode="${meta_mode}: nvidia-auto-select @${width}x${height} +${ext_pos_x}+${ext_pos_y} {ViewPortIn=${width}x${height}, ViewPortOut=${width}x${height}+${ext_pos_x}+${ext_pos_y}, ForceFullCompositionPipeline=On}"
 
     ext_rotate=${rotates["$rotate"]}
@@ -254,6 +257,7 @@ help-info()
         -i, --info          get info(name and resolution) about the extend monitor
         -m, --manual        scale the extend monitor by the params given by manual (will use all of the params)
         -s, --suggest       give a scale suggest based on the params W and H
+        -h, --help          show help info
     PARAM:
         -N, --dpname        name of the extend monitor
         -W, --width         width of the extend monitor resolution
@@ -271,6 +275,7 @@ help-info()
 
 if [ $options_count -eq 0 ]; then
     echo -e "You must specify one of the '-aimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
+    exit
 fi
 
 if [ $options_count -gt 1 ]; then
@@ -279,7 +284,7 @@ if [ $options_count -gt 1 ]; then
 fi
 
 if [ $auto = true ]; then extdp-auto; exit; fi
-if [ $info = true ]; then info=$(extdp-info); if [ -z "$info" ]; then echo "find no extend monitor";fi; exit; fi
+if [ $info = true ]; then info=$(extdp-info); if [ -z "$info" ]; then echo "find no extend monitor"; fi; exit; fi
 if [ $manual = true ]; then extdp-exec "$N" "$W" "$H" "$X" "$Y" "$P" "$R"; exit; fi
 if [ $suggest = true ]; then extdp-scale "$W" "$H"; exit; fi
 if [ $help = true ]; then help-info; exit; fi
