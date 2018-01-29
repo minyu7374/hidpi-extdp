@@ -23,7 +23,8 @@ width_scale_dic[1366]=2.5
 width_scale_dic[1024]=3.5
 height_scale_dic[768]=2.5
 
-positions=("right-of" "left-of" "over" "below" "same-as")
+# 方向参数还是不要写进xrandr命令里，通过fb和pos的控制更准确，加入方向反而会有重叠。
+# positions=("right-of" "left-of" "over" "below" "same-as")
 rotates=("normal" "inverted" "right" "left")
 
 max() 
@@ -169,8 +170,8 @@ extdp-exec()
     nvidia-settings --assign CurrentMetaMode="${meta_mode}: nvidia-auto-select @${width}x${height} +${ext_pos_x}+${ext_pos_y} {ViewPortIn=${width}x${height}, ViewPortOut=${width}x${height}+${ext_pos_x}+${ext_pos_y}, ForceFullCompositionPipeline=On}"
 
     ext_rotate=${rotates["$rotate"]}
-    ext_postion=${positions["$position"]}
-    eval "xrandr --fb ${fb_width}x${fb_height} --output ${buildin_dpname} --auto --pos ${in_pos_x}x${in_pos_y} --output $name --mode ${width}x${height} --panning ${panning_width}x${panning_height}+${ext_pos_x}+${ext_pos_y} --scale ${width_scale}x${height_scale} --pos ${ext_pos_x}x${ext_pos_y} --rotate ${ext_rotate} --${ext_postion} ${buildin_dpname}"
+    # ext_postion=${positions["$position"]}
+    eval "xrandr --fb ${fb_width}x${fb_height} --output ${buildin_dpname} --auto --pos ${in_pos_x}x${in_pos_y} --output $name --mode ${width}x${height} --panning ${panning_width}x${panning_height}+${ext_pos_x}+${ext_pos_y} --scale ${width_scale}x${height_scale} --pos ${ext_pos_x}x${ext_pos_y} --rotate ${ext_rotate}" # --${ext_postion} ${buildin_dpname}
 }
 
 extdp-auto() {
