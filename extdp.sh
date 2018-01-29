@@ -113,12 +113,12 @@ extdp-exec()
         3)
             # over / below
             fb_height=$((buildin_height+fb_ext_height))
-            fb_width=$(max "buildin_width" "$fb_ext_width")
+            fb_width=$(max "$buildin_width" "$fb_ext_width")
             ;;
         4)
             # same
             fb_height=$(max "$buildin_height" "$fb_ext_height")
-            fb_width=$(max "buildin_width" "$fb_ext_width")
+            fb_width=$(max "$buildin_width" "$fb_ext_width")
             ;;
         *)
             echo "wrong position" >&2
