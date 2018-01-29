@@ -48,7 +48,7 @@ near_scale()
 
 extdp-info() 
 {
-    xrandr | grep -A 1 '\bconnected' | awk '{if (NR%2==1) {name=$1} else {split($1, resolution, "x"); print name, resolution[1], resolution[2]}}' | grep -v "$buildin_dpname"
+    xrandr | grep -A 1 '\bconnected' | grep -v '^--$' |awk '{if (NR%2==1) {name=$1} else {split($1, resolution, "x"); print name, resolution[1], resolution[2]}}' | grep -v "$buildin_dpname"
 }
 
 extdp-scale()
@@ -283,7 +283,7 @@ if [ $options_count -gt 1 ]; then
 fi
 
 if [ $auto = true ]; then extdp-auto; exit; fi
-if [ $info = true ]; then info=$(extdp-info); if [ -z "$info" ]; then echo "find no external display"; fi; exit; fi
+if [ $info = true ]; then ext_info=$(extdp-info); if [ -n "$info" ]; then echo "$ext_info"; else "find no external display"; fi; exit; fi
 if [ $manual = true ]; then extdp-exec "$N" "$W" "$H" "$X" "$Y" "$P" "$R"; exit; fi
 if [ $suggest = true ]; then extdp-scale "$W" "$H"; exit; fi
 if [ $help = true ]; then help-info; exit; fi
