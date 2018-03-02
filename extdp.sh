@@ -195,12 +195,31 @@ extdp-auto() {
     extdp-exec "$extdp_name" "$extdp_width" "$extdp_height" "$width_scale" "$height_scale" 1 0
 }
 
+extdp-same() {
+    extdp_info=$(extdp-info)
+    if [ -z "$extdp_info" ]; then
+        echo "find no external display"
+        exit 0
+    fi
+    extdp_info_arr=($extdp_info)
+    # read -a extdp_info_arr <<< "$extdp_info"
+    extdp_name=${extdp_info_arr[0]}
+    extdp_width=${extdp_info_arr[1]}
+    extdp_height=${extdp_info_arr[2]}
+    
+    width_scale=$(echo "scale=5;$buildin_width/$extdp_width" | bc)
+    height_scale=$(echo "scale=5;$buildin_height/$extdp_height" | bc)
+
+    extdp-exec "$extdp_name" "$extdp_width" "$extdp_height" "$width_scale" "$height_scale" 4 0
+}
+
 # extdp-auto
-temp=$(getopt -o aimshN:W:H:X:Y:P:R: --long auto,info,manual,suggest,help,dpname:,width:,height:,width-scale:,height-scale:,postion:rotate: -n "$0" -- "$@")
+temp=$(getopt -o aeimshN:W:H:X:Y:P:R: --long auto,same,info,manual,suggest,help,dpname:,width:,height:,width-scale:,height-scale:,postion:rotate: -n "$0" -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$temp"
 
 auto=false
+same=false
 info=false
 manual=false
 suggest=false
@@ -219,6 +238,8 @@ while true ; do
     case "$1" in
         -a|--auto) 
             auto=true; ((options_count++)); shift ;;
+        -e|--same) 
+            same=true; ((options_count++)); shift ;;
         -i|--info) 
             info=true; ((options_count++)); shift ;;
         -m|--manual)
@@ -255,6 +276,7 @@ help-info()
     echo '
     OPTION:
         -a, --auto          auto detect the external display and scale it on left of the laptop
+        -e, --same          auto detect the external display and scale it same as the laptop
         -i, --info          get info(name and resolution) about the external display
         -m, --manual        scale the external display by the params manual given(will use all of the params)
         -s, --suggest       give a scale suggest based on the params W and H
@@ -273,16 +295,17 @@ help-info()
 }
 
 if [ $options_count -eq 0 ]; then
-    echo -e "You must specify one of the '-aimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
+    echo -e "You must specify one of the '-aeimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
     exit 1
 fi
 
 if [ $options_count -gt 1 ]; then
-    echo "You can only specify one of the '-aimsh'" >&2
+    echo "You can only specify one of the '-aeimsh'" >&2
     exit 1
 fi
 
 if [ $auto = true ]; then extdp-auto; exit; fi
+if [ $same = true ]; then extdp-same; exit; fi
 if [ $info = true ]; then ext_info=$(extdp-info); if [ -n "$info" ]; then echo "$ext_info"; else "find no external display"; fi; exit; fi
 if [ $manual = true ]; then extdp-exec "$N" "$W" "$H" "$X" "$Y" "$P" "$R"; exit; fi
 if [ $suggest = true ]; then extdp-scale "$W" "$H"; exit; fi
