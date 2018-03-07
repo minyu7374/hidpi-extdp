@@ -5,7 +5,7 @@
 # mail: minyu7374@gmail.com
 # Created Time: Sat 27 Jan 2018 8:21:32 AM CST
 #########################################################################
-buildin_dpname="eDP-1-1" 
+buildin_dpname="eDP-1-1"
 buildin_width=3840
 buildin_height=2160
 
@@ -27,12 +27,12 @@ height_scale_dic[768]=2.5
 # positions=("right-of" "left-of" "over" "below" "same-as")
 rotates=("normal" "inverted" "right" "left")
 
-max() 
+max()
 {
     v=$1; shift
     while [ -n "$1" ]; do
         if [ "$1" -gt "$v" ]; then v=$1; fi
-        shift 
+        shift
     done
     echo "$v"
 }
@@ -46,7 +46,7 @@ near_scale()
     echo "$m*0.25" | bc
 }
 
-extdp-info() 
+extdp-info()
 {
     xrandr | grep -A 1 '\bconnected' | grep -v '^--$' |awk '{if (NR%2==1) {name=$1} else {split($1, resolution, "x"); print name, resolution[1], resolution[2]}}' | grep -v "$buildin_dpname"
 }
@@ -55,10 +55,10 @@ extdp-scale()
 {
     width=$1
     height=$2
-    
+
     width_scale=${width_scale_dic["$width"]}
     height_scale=${height_scale_dic["$height"]}
-    
+
 
     if [ -z "$width_scale" ]; then
         width_scale=$(near_scale "$width" "$buildin_width")
@@ -82,7 +82,7 @@ extdp-exec()
 
     panning_width=$(echo "$width*$width_scale" | bc | cut -d. -f1)
     panning_height=$(echo "$height*$height_scale" | bc | cut -d. -f1)
-    
+
     case "$rotate" in
         0);&
         1)
@@ -101,7 +101,7 @@ extdp-exec()
             exit 1
             ;;
     esac
-    
+
     case "$position" in
         0);&
         1)
@@ -163,7 +163,7 @@ extdp-exec()
             ext_pos_y=0
             ;;
     esac
-    
+
     # 针对NVIDIA的bug (https://askubuntu.com/questions/704503/scale-2x2-in-xrandr-causes-the-display-to-not-display-anything/979551#979551)
     # 个人笔记本上(安装的Gentoo)是这样命名的，其他系统或笔记本可能不同
     meta_mode=${name/DP/DPY}
@@ -185,14 +185,16 @@ extdp-auto() {
     extdp_name=${extdp_info_arr[0]}
     extdp_width=${extdp_info_arr[1]}
     extdp_height=${extdp_info_arr[2]}
-    
-    scales=$(extdp-scale "$extdp_width" "$extdp_height") 
+
+    scales=$(extdp-scale "$extdp_width" "$extdp_height")
     scales_arr=($scales)
     # echo ${scales[@]}
     width_scale=${scales_arr[0]}
     height_scale=${scales_arr[1]}
-    
-    extdp-exec "$extdp_name" "$extdp_width" "$extdp_height" "$width_scale" "$height_scale" 1 0
+
+    echo "$extdp_name $extdp_width(x$width_scale) $extdp_height(x$height_scale)"
+
+    extdp-exec "$extdp_name" "$extdp_width" "$extdp_height" "$width_scale" "$height_scale" "$1" "$2"
 }
 
 extdp-same() {
@@ -206,19 +208,21 @@ extdp-same() {
     extdp_name=${extdp_info_arr[0]}
     extdp_width=${extdp_info_arr[1]}
     extdp_height=${extdp_info_arr[2]}
-    
+
     width_scale=$(echo "scale=5;$buildin_width/$extdp_width" | bc)
     height_scale=$(echo "scale=5;$buildin_height/$extdp_height" | bc)
 
+    echo "$extdp_name $extdp_width(x$width_scale) $extdp_height(x$height_scale)"
     extdp-exec "$extdp_name" "$extdp_width" "$extdp_height" "$width_scale" "$height_scale" 4 0
 }
 
 # extdp-auto
-temp=$(getopt -o aeimshN:W:H:X:Y:P:R: --long auto,same,info,manual,suggest,help,dpname:,width:,height:,width-scale:,height-scale:,postion:rotate: -n "$0" -- "$@")
+temp=$(getopt -o rlaimshN:W:H:X:Y:P:R: --long right,left,same,info,manual,suggest,help,dpname:,width:,height:,width-scale:,height-scale:,postion:rotate: -n "$0" -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$temp"
 
-auto=false
+right=false
+left=false
 same=false
 info=false
 manual=false
@@ -236,11 +240,13 @@ R=0
 
 while true ; do
     case "$1" in
-        -a|--auto) 
-            auto=true; ((options_count++)); shift ;;
-        -e|--same) 
+        -r|--right)
+            right=true; ((options_count++)); shift ;;
+        -l|--left)
+            left=true; ((options_count++)); shift ;;
+        -a|--same)
             same=true; ((options_count++)); shift ;;
-        -i|--info) 
+        -i|--info)
             info=true; ((options_count++)); shift ;;
         -m|--manual)
             manual=true; ((options_count++)); shift ;;
@@ -262,9 +268,9 @@ while true ; do
             if [ -n "$2" ] ; then P=$2; fi; shift 2 ;;
         -R|--rotate)
             if [ -n "$2" ] ; then R=$2; fi; shift 2 ;;
-        --) 
+        --)
             shift ; break ;;
-        *) 
+        *)
             echo "Internal error!" >&2; exit 1 ;;
     esac
 done
@@ -275,8 +281,9 @@ help-info()
     echo -e "Example:\n\t$0 -m -N 'DP-1' -W 1920 -H 1080 -X 1.75 -Y 1.75 -P 1 -R 0"
     echo '
     OPTION:
-        -a, --auto          auto detect the external display and scale it on left of the laptop
-        -e, --same          auto detect the external display and scale it same as the laptop
+        -r, --right         auto detect the external display and scale it on right of the laptop
+        -l, --left          auto detect the external display and scale it on left of the laptop
+        -a, --same          auto detect the external display and scale it same as the laptop
         -i, --info          get info(name and resolution) about the external display
         -m, --manual        scale the external display by the params manual given(will use all of the params)
         -s, --suggest       give a scale suggest based on the params W and H
@@ -295,7 +302,7 @@ help-info()
 }
 
 if [ $options_count -eq 0 ]; then
-    echo -e "You must specify one of the '-aeimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
+    echo -e "You must specify one of the '-rlaimsh'.\n  try '$0 -h' or '$0 --help' for more information." >&2
     exit 1
 fi
 
@@ -304,7 +311,8 @@ if [ $options_count -gt 1 ]; then
     exit 1
 fi
 
-if [ $auto = true ]; then extdp-auto; exit; fi
+if [ $right = true ]; then extdp-auto 0 0; exit; fi
+if [ $left = true ]; then extdp-auto 1 0; exit; fi
 if [ $same = true ]; then extdp-same; exit; fi
 if [ $info = true ]; then ext_info=$(extdp-info); if [ -n "$info" ]; then echo "$ext_info"; else "find no external display"; fi; exit; fi
 if [ $manual = true ]; then extdp-exec "$N" "$W" "$H" "$X" "$Y" "$P" "$R"; exit; fi
