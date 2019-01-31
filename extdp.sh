@@ -5,23 +5,25 @@
 # mail: minyu7374@gmail.com
 # Created Time: Sat 27 Jan 2018 8:21:32 AM CST
 #########################################################################
+# set -x
 buildin_dpname="eDP-1-1"
+# buildin_dpname="eDP-1"
 buildin_width=3840
 buildin_height=2160
 
 declare -A width_scale_dic
 declare -A height_scale_dic
 
-width_scale_dic[1920]=1.75
-height_scale_dic[1080]=1.75
-height_scale_dic[1200]=1.5
+width_scale_dic[1920]=2.0
+height_scale_dic[1080]=2.0
+height_scale_dic[1200]=1.75
 
 width_scale_dic[1600]=2.25
 height_scale_dic[900]=2.25
 
-width_scale_dic[1366]=2.5
-width_scale_dic[1024]=3.5
-height_scale_dic[768]=2.5
+width_scale_dic[1366]=2.75
+width_scale_dic[1024]=3.75
+height_scale_dic[768]=2.75
 
 # 方向参数还是不要写进xrandr命令里，通过fb和pos的控制更准确，加入方向反而会有重叠。
 # positions=("right-of" "left-of" "over" "below" "same-as")
@@ -41,7 +43,7 @@ max()
 # 个人强迫症，要求scale保证是 0.25 的倍数
 near_scale()
 {
-    s=$(echo "scale=2;$2/$1*0.85" | bc)
+    s=$(echo "scale=2;$2/$1*0.95" | bc)
     m=$(echo "($s/0.25)+1.0"| bc | cut -d. -f1)
     echo "$m*0.25" | bc
 }
@@ -157,8 +159,7 @@ extdp-exec()
             ;;
         4)
             # same
-            in_pos_x=0
-            in_pos_y=0
+            in_pos_x=0 in_pos_y=0
             ext_pos_x=0
             ext_pos_y=0
             ;;
@@ -172,6 +173,14 @@ extdp-exec()
     ext_rotate=${rotates["$rotate"]}
     # ext_postion=${positions["$position"]}
     eval "xrandr --fb ${fb_width}x${fb_height} --output ${buildin_dpname} --auto --pos ${in_pos_x}x${in_pos_y} --output $name --mode ${width}x${height} --panning ${panning_width}x${panning_height}+${ext_pos_x}+${ext_pos_y} --scale ${width_scale}x${height_scale} --pos ${ext_pos_x}x${ext_pos_y} --rotate ${ext_rotate}" # --${ext_postion} ${buildin_dpname}
+    # 重复两次可以保证两个屏幕上的壁纸都是占满的
+    if [ "$primary" = "true" ]; then
+        xrandr --output "$buildin_dpname" --primary
+        xrandr --output "$extdp_name" --primary
+    else
+        xrandr --output "$extdp_name" --primary
+        xrandr --output "$buildin_dpname" --primary
+    fi
 }
 
 extdp-auto() {
@@ -217,13 +226,14 @@ extdp-same() {
 }
 
 # extdp-auto
-temp=$(getopt -o rlaimshN:W:H:X:Y:P:R: --long right,left,same,info,manual,suggest,help,dpname:,width:,height:,width-scale:,height-scale:,postion:rotate: -n "$0" -- "$@")
+temp=$(getopt -o rlapimshN:W:H:X:Y:P:R: --long right,left,same,primary,info,manual,suggest,help,dpname:,width:,height:,width-scale:,height-scale:,postion:rotate: -n "$0" -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$temp"
 
 right=false
 left=false
 same=false
+primary=false
 info=false
 manual=false
 suggest=false
@@ -246,6 +256,8 @@ while true ; do
             left=true; ((options_count++)); shift ;;
         -a|--same)
             same=true; ((options_count++)); shift ;;
+        -p|--primary)
+            primary=true; shift ;;
         -i|--info)
             info=true; ((options_count++)); shift ;;
         -m|--manual)
@@ -284,6 +296,7 @@ help-info()
         -r, --right         auto detect the external display and scale it on right of the laptop
         -l, --left          auto detect the external display and scale it on left of the laptop
         -a, --same          auto detect the external display and scale it same as the laptop
+        -p, --primary       make the external display to be primary display
         -i, --info          get info(name and resolution) about the external display
         -m, --manual        scale the external display by the params manual given(will use all of the params)
         -s, --suggest       give a scale suggest based on the params W and H
