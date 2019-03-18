@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 
 DP=$(xrandr | grep primary | awk '{print $1}')
 
