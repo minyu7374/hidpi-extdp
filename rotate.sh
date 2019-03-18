@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+set -x
 
 DP=$(xrandr | grep primary | awk '{print $1}')
 
@@ -16,12 +16,13 @@ function rotate
     xrandr --output "$1" --rotate "$2"
 
     TRANSFORM='Coordinate Transformation Matrix'
-    MATRIX=(${MATRIX_DICT["$2"]})
-    xinput list | grep pointer | grep -v 'Virtual core' | grep -o 'id=[0-9]*' | sed 's/id=//' | xargs -I{}  xinput set-prop {} "$TRANSFORM" "${MATRIX[@]}"
+    # MATRIX=(${MATRIX_DICT["$2"]})
+    IFS=" " read -r -a MATRIX <<< "${MATRIX_DICT["$2"]}"
+    xinput list --short | grep pointer | grep -v 'Virtual core' | grep -oP 'id=\K[0-9]*' | xargs -I{}  xinput set-prop {} "$TRANSFORM" "${MATRIX[@]}"
 }
 
 if [ -z "$1" ] || [ -z "${MATRIX_DICT[$1]}" ] ; then
-    opts=$(echo "${!MATRIX_DICT[*]}" | sed 's/ /\|/g')
+    opts=$(${!MATRIX_DICT[*]//\ /\|/})
     echo -e "Usage:\n\t$0 [$opts]"
 
     echo
